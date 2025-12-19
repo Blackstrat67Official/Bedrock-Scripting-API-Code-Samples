@@ -1,0 +1,221 @@
+# ScoreboardStorage – Usage Examples
+
+This document provides practical examples for all public methods exposed by the `ScoreboardStorage` utility.
+The examples assume **Minecraft Bedrock Edition Script API** and an existing import of the module.
+
+```js
+import { ScoreboardStorage } from "./scoreboardStorage";
+```
+
+---
+
+## 1. Saving Data
+
+### Save a JSON object into a scoreboard
+
+```js
+const playerDataId = ScoreboardStorage.save("players_db", {
+    uuid: "abc-123",
+    name: "Steve",
+    money: 250,
+    rank: "VIP"
+});
+```
+
+**Result**
+
+* A new participant is created
+* The participant name contains the JSON string
+* The score is used as a unique memory address (`playerDataId`)
+
+---
+
+## 2. Reading Data by ID
+
+### Retrieve a JSON object using its unique ID
+
+```js
+const playerData = ScoreboardStorage.getById("players_db", playerDataId);
+
+if (playerData) {
+    console.log(playerData.money);
+}
+```
+
+**Returned value**
+
+```json
+{
+    "uuid": "abc-123",
+    "name": "Steve",
+    "money": 250,
+    "rank": "VIP"
+}
+```
+
+---
+
+## 3. Reading All Stored Data
+
+### Retrieve all records from an objective
+
+```js
+const allPlayers = ScoreboardStorage.getAll("players_db");
+
+for (const record of allPlayers) {
+    console.log(record.id, record.data.name);
+}
+```
+
+**Returned structure**
+
+```js
+[
+    {
+        id: 1,
+        data: { ... }
+    },
+    {
+        id: 2,
+        data: { ... }
+    }
+]
+```
+
+---
+
+## 4. Updating Data
+
+### Update an existing JSON object while keeping the same ID
+
+```js
+const success = ScoreboardStorage.updateById("players_db", playerDataId, {
+    uuid: "abc-123",
+    name: "Steve",
+    money: 500,
+    rank: "VIP+"
+});
+
+if (success) {
+    console.log("Player data updated");
+}
+```
+
+**Important**
+
+* The old participant is removed
+* The ID (score) remains unchanged
+* The JSON string is fully replaced
+
+---
+
+## 5. Deleting Data
+
+### Delete a record using its ID
+
+```js
+const deleted = ScoreboardStorage.deleteById("players_db", playerDataId);
+
+if (deleted) {
+    console.log("Player data removed");
+}
+```
+
+**Effect**
+
+* The participant is removed from the scoreboard
+* The ID becomes available for reuse (unless handled differently)
+
+---
+
+## 6. Searching Data
+
+### Find a record using a custom condition
+
+```js
+const foundPlayer = ScoreboardStorage.find("players_db", data => {
+    return data.uuid === "abc-123";
+});
+
+if (foundPlayer) {
+    console.log(foundPlayer.id, foundPlayer.data);
+}
+```
+
+**Use cases**
+
+* Lookup by UUID
+* Lookup by role/rank
+* Lookup by any custom field
+
+---
+
+## 7. Clearing an Objective
+
+### Remove all stored data from an objective
+
+```js
+ScoreboardStorage.clear("players_db");
+```
+
+**Effect**
+
+* All participants are removed
+* The objective itself remains intact
+
+---
+
+## 8. Example: Full CRUD Flow
+
+```js
+// CREATE
+const id = ScoreboardStorage.save("items_db", {
+    itemId: "diamond_sword",
+    durability: 1561,
+    owner: "Steve"
+});
+
+// READ
+const item = ScoreboardStorage.getById("items_db", id);
+
+// UPDATE
+ScoreboardStorage.updateById("items_db", id, {
+    itemId: "diamond_sword",
+    durability: 1200,
+    owner: "Steve"
+});
+
+// DELETE
+ScoreboardStorage.deleteById("items_db", id);
+```
+
+---
+
+## 9. Conceptual Mapping
+
+| Scoreboard Element | Logical Meaning            |
+| ------------------ | -------------------------- |
+| Objective          | Database / Table           |
+| Participant        | JSON Data Blob             |
+| Score              | Memory Address / Unique ID |
+
+---
+
+## Notes & Limitations
+
+* JSON size is limited by scoreboard participant name length
+* Data is persistent across world reloads
+* Not suitable for large datasets without chunking
+* IDs are sequential by default
+
+---
+
+If you want, I can next:
+
+* add **best practices**
+* document **edge cases**
+* provide a **production-ready README**
+* extend this with **JSON chunking examples**
+* integrate it with your **backend + Discord bot workflow**
+
+Just tell me how far you want to push it.
