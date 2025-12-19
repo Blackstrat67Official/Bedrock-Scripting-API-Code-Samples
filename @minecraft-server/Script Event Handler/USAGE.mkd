@@ -1,173 +1,288 @@
-# Script Event `prefix:say` – Usage
+Di seguito trovi un **file Markdown generale**, pensato come **guida concettuale e pratica** all’uso degli **Script Events in Minecraft Bedrock**, **non legato a uno specifico handler**, ma con esempi progressivi e spiegazioni passo-passo.
 
-This document explains how to use the `prefix:say` Script Event and how it is handled by the Script API.
-
----
-
-## Overview
-
-The `prefix:say` Script Event is a custom event that allows commands, command blocks, NPCs, or entities to send a text payload to the script runtime.
-
-The script receives the event, validates its source, and processes the message accordingly.
+È adatto come documentazione di progetto o come riferimento per chi impara a usare gli Script Events correttamente.
 
 ---
 
-## Event Identifier
+# Script Events – General Usage Guide
+
+This document explains what Script Events are, how they work, and how to use them step by step in Minecraft Bedrock Edition using the Script API.
+
+---
+
+## 1. What Is a Script Event
+
+A **Script Event** is a custom event that allows Minecraft commands, blocks, NPCs, or entities to send data directly to the Script API.
+
+Script Events act as a **bridge between the command system and JavaScript logic**.
+
+They are triggered using the `/scriptevent` command and handled inside a script.
+
+---
+
+## 2. Basic Structure of a Script Event
+
+A Script Event is composed of:
 
 ```
-prefix:say
+/scriptevent <namespace:event> <message>
 ```
 
-* **Namespace**: `prefix`
-* **Event name**: `say`
+### Example
+
+```mcfunction
+/scriptevent example:test Hello
+```
+
+* `example:test` → Event identifier
+* `Hello` → Message payload (string)
 
 ---
 
-## How to Trigger the Event
+## 3. Event Identifier (Namespace)
+
+Script Event identifiers follow this format:
+
+```
+namespace:eventName
+```
+
+### Why namespaces matter
+
+* Prevent name collisions
+* Allow modular design
+* Act like an API boundary
+
+**Good examples**
+
+```
+admin:kick
+economy:pay
+ui:open
+```
+
+**Bad examples**
+
+```
+test
+event1
+command
+```
+
+---
+
+## 4. Listening to Script Events in JavaScript
+
+To handle Script Events, you subscribe to `scriptEventReceive`.
+
+### Minimal Listener Example
+
+```js
+import { system } from "@minecraft/server";
+
+system.afterEvents.scriptEventReceive.subscribe((event) => {
+    console.log(event.id, event.message);
+});
+```
+
+At this stage, the script receives **all** Script Events.
+
+---
+
+## 5. Filtering by Event ID
+
+Always filter events by identifier.
+
+```js
+if (event.id !== "example:test") return;
+```
+
+This ensures your logic only reacts to the intended event.
+
+---
+
+## 6. Understanding the Event Object
+
+When a Script Event is received, the script gets a `ScriptEventCommandMessageAfterEvent` object.
+
+### Important Properties
+
+| Property       | Description                |
+| -------------- | -------------------------- |
+| `id`           | Event identifier           |
+| `message`      | Payload string             |
+| `sourceType`   | Where the event originated |
+| `sourceEntity` | Entity source (if any)     |
+| `sourceBlock`  | Block source (if any)      |
+| `initiator`    | NPC initiator (if any)     |
+
+---
+
+## 7. Detecting the Source of an Event
+
+Script Events can be triggered from different places.
+
+### Common Sources
+
+* Player or entity
+* Command block
+* NPC dialogue
+* Server execution
+
+### Example: Source Detection
+
+```js
+switch (event.sourceType) {
+    case ScriptEventSource.Entity:
+        // Triggered by an entity
+        break;
+
+    case ScriptEventSource.Block:
+        // Triggered by a block
+        break;
+
+    case ScriptEventSource.NPCDialogue:
+        // Triggered by an NPC
+        break;
+}
+```
+
+---
+
+## 8. Triggering Script Events
 
 ### From Chat or Functions
 
 ```mcfunction
-/scriptevent prefix:say Hello world
+/scriptevent example:test Hello from chat
 ```
 
 ---
 
-### From a Command Block
+### From Command Blocks
 
 ```mcfunction
-/scriptevent prefix:say Message sent by command block
+/scriptevent example:test Triggered by block
 ```
 
-The handler will detect the source as a block and expose its location.
+The script can detect the block location using `sourceBlock`.
 
 ---
 
-### From an NPC Dialogue
+### From NPC Dialogue
 
 ```mcfunction
-/scriptevent prefix:say Message sent by NPC
+/scriptevent example:test Triggered by NPC
 ```
 
-If triggered via an NPC, the `initiator` entity will be available.
+The `initiator` entity becomes available.
 
 ---
 
-## Event Payload
+## 9. Using the Message Payload
 
-### Message
+The `message` is always a string.
 
-The message is passed as a raw string:
+### Plain Text Usage
 
+```mcfunction
+/scriptevent example:test Hello world
 ```
-Hello world
-```
-
-Inside the script:
 
 ```js
 event.message === "Hello world"
 ```
 
-Empty or whitespace-only messages are ignored.
-
 ---
 
-## Event Source Detection
-
-The handler automatically detects where the event originated from using `sourceType`.
-
-### Supported Source Types
-
-| Source Type   | Description                               |
-| ------------- | ----------------------------------------- |
-| `Entity`      | Triggered by an entity (player, NPC, mob) |
-| `Block`       | Triggered by a block (command block)      |
-| `NPCDialogue` | Triggered by an NPC dialogue              |
-| `Server`      | Triggered by the server                   |
-
----
-
-### Source Data Available
-
-Depending on the source type, different properties are populated:
-
-| Property       | Description                     |
-| -------------- | ------------------------------- |
-| `sourceEntity` | Entity that triggered the event |
-| `sourceBlock`  | Block that triggered the event  |
-| `initiator`    | NPC initiator entity            |
-| `sourceType`   | Enum describing the source      |
-
----
-
-## Output Behavior
-
-When the event is processed:
-
-* The message is broadcast to all players
-* The source information is logged to chat
-* If an entity triggered the event, it receives a confirmation message
-
----
-
-## Example Output
-
-```
-[ScriptEvent] Hello world
-[Source] Entity: minecraft:player
-```
-
----
-
-## JSON Payload (Optional Usage)
-
-The message may also contain JSON data:
+### Structured Data (JSON)
 
 ```mcfunction
-/scriptevent prefix:say {"action":"announce","text":"Server restart in 5 minutes"}
+/scriptevent example:test {"action":"announce","text":"Server restart"}
 ```
-
-The handler can be extended to parse the payload:
 
 ```js
 const data = JSON.parse(event.message);
 ```
 
----
-
-## Best Practices
-
-* Always use a unique namespace (`yourAddon:event`)
-* Validate the message content
-* Use `sourceType` instead of guessing the origin
-* Keep Script Events lightweight
-* Treat Script Events as a public API
+This allows Script Events to behave like function calls with parameters.
 
 ---
 
-## Common Errors
+## 10. Step-by-Step Example Flow
 
-| Issue              | Cause               |
-| ------------------ | ------------------- |
-| Event not received | Wrong identifier    |
-| Source undefined   | Triggered by server |
-| JSON parse error   | Invalid payload     |
+1. A command triggers a Script Event
+2. The Script API receives it
+3. The handler filters by `event.id`
+4. The source is validated
+5. The message is parsed
+6. The action is executed
+
+This flow mirrors how APIs and backend endpoints work.
 
 ---
 
-## Intended Use Cases
+## 11. Script Events as an API Layer
 
-* Admin commands
+Script Events can be treated as:
+
+* Commands
+* Remote procedure calls
+* Message queues
+* Backend endpoints
+
+This makes them ideal for:
+
+* Admin systems
+* NPC logic
+* Automation
 * Debug tooling
-* NPC interaction logic
-* Command block automation
-* Script-to-script communication
 
 ---
 
-## Notes
+## 12. Best Practices
 
-* Script Events are not a replacement for commands
-* They act as a controlled entry point into script logic
-* Large payloads should be avoided
+* Always use namespaces
+* Keep payloads small
+* Validate input
+* Handle source types explicitly
+* Avoid heavy logic inside listeners
+* Treat Script Events as public APIs
+
+---
+
+## 13. Common Mistakes
+
+| Mistake              | Consequence         |
+| -------------------- | ------------------- |
+| No ID filtering      | Unintended behavior |
+| No source validation | Security issues     |
+| Parsing invalid JSON | Runtime crashes     |
+| Large payloads       | Performance issues  |
+
+---
+
+## 14. Limitations
+
+* Payload is string-only
+* No return value
+* Execution is one-way
+* Not designed for large data transfer
+
+---
+
+## 15. When to Use Script Events
+
+Use Script Events when you need:
+
+* Communication between commands and scripts
+* Controlled entry points to logic
+* Decoupling between systems
+* Lightweight event-based architecture
+
+---
+
+## Final Notes
+
+Script Events are one of the most powerful yet underestimated tools in the Bedrock Script API.
+Used correctly, they enable clean, modular, and maintainable systems.
