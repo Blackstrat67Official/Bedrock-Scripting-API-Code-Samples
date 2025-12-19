@@ -198,24 +198,3 @@ ScoreboardStorage.deleteById("items_db", id);
 | Objective          | Database / Table           |
 | Participant        | JSON Data Blob             |
 | Score              | Memory Address / Unique ID |
-
----
-
-## Notes & Limitations
-
-* JSON size is limited by scoreboard participant name length
-* Data is persistent across world reloads
-* Not suitable for large datasets without chunking
-* IDs are sequential by default
-
----
-
-If you want, I can next:
-
-* add **best practices**
-* document **edge cases**
-* provide a **production-ready README**
-* extend this with **JSON chunking examples**
-* integrate it with your **backend + Discord bot workflow**
-
-Just tell me how far you want to push it.
