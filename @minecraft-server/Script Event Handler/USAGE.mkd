@@ -1,0 +1,173 @@
+# Script Event `prefix:say` – Usage
+
+This document explains how to use the `prefix:say` Script Event and how it is handled by the Script API.
+
+---
+
+## Overview
+
+The `prefix:say` Script Event is a custom event that allows commands, command blocks, NPCs, or entities to send a text payload to the script runtime.
+
+The script receives the event, validates its source, and processes the message accordingly.
+
+---
+
+## Event Identifier
+
+```
+prefix:say
+```
+
+* **Namespace**: `prefix`
+* **Event name**: `say`
+
+---
+
+## How to Trigger the Event
+
+### From Chat or Functions
+
+```mcfunction
+/scriptevent prefix:say Hello world
+```
+
+---
+
+### From a Command Block
+
+```mcfunction
+/scriptevent prefix:say Message sent by command block
+```
+
+The handler will detect the source as a block and expose its location.
+
+---
+
+### From an NPC Dialogue
+
+```mcfunction
+/scriptevent prefix:say Message sent by NPC
+```
+
+If triggered via an NPC, the `initiator` entity will be available.
+
+---
+
+## Event Payload
+
+### Message
+
+The message is passed as a raw string:
+
+```
+Hello world
+```
+
+Inside the script:
+
+```js
+event.message === "Hello world"
+```
+
+Empty or whitespace-only messages are ignored.
+
+---
+
+## Event Source Detection
+
+The handler automatically detects where the event originated from using `sourceType`.
+
+### Supported Source Types
+
+| Source Type   | Description                               |
+| ------------- | ----------------------------------------- |
+| `Entity`      | Triggered by an entity (player, NPC, mob) |
+| `Block`       | Triggered by a block (command block)      |
+| `NPCDialogue` | Triggered by an NPC dialogue              |
+| `Server`      | Triggered by the server                   |
+
+---
+
+### Source Data Available
+
+Depending on the source type, different properties are populated:
+
+| Property       | Description                     |
+| -------------- | ------------------------------- |
+| `sourceEntity` | Entity that triggered the event |
+| `sourceBlock`  | Block that triggered the event  |
+| `initiator`    | NPC initiator entity            |
+| `sourceType`   | Enum describing the source      |
+
+---
+
+## Output Behavior
+
+When the event is processed:
+
+* The message is broadcast to all players
+* The source information is logged to chat
+* If an entity triggered the event, it receives a confirmation message
+
+---
+
+## Example Output
+
+```
+[ScriptEvent] Hello world
+[Source] Entity: minecraft:player
+```
+
+---
+
+## JSON Payload (Optional Usage)
+
+The message may also contain JSON data:
+
+```mcfunction
+/scriptevent prefix:say {"action":"announce","text":"Server restart in 5 minutes"}
+```
+
+The handler can be extended to parse the payload:
+
+```js
+const data = JSON.parse(event.message);
+```
+
+---
+
+## Best Practices
+
+* Always use a unique namespace (`yourAddon:event`)
+* Validate the message content
+* Use `sourceType` instead of guessing the origin
+* Keep Script Events lightweight
+* Treat Script Events as a public API
+
+---
+
+## Common Errors
+
+| Issue              | Cause               |
+| ------------------ | ------------------- |
+| Event not received | Wrong identifier    |
+| Source undefined   | Triggered by server |
+| JSON parse error   | Invalid payload     |
+
+---
+
+## Intended Use Cases
+
+* Admin commands
+* Debug tooling
+* NPC interaction logic
+* Command block automation
+* Script-to-script communication
+
+---
+
+## Notes
+
+* Script Events are not a replacement for commands
+* They act as a controlled entry point into script logic
+* Large payloads should be avoided
