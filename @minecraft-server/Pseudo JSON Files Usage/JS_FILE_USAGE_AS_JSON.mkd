@@ -1,0 +1,44 @@
+# Using Pseudo JSON Files in Minecraft Bedrock
+
+This document explains how to use pseudo JSON files in Minecraft Bedrock Edition using the Script API.
+
+Because Bedrock does not support reading external `.json` files at runtime, static data must be defined and imported through JavaScript modules.
+
+---
+
+## 1. The Problem
+
+In Minecraft Bedrock Script API:
+
+- You cannot read arbitrary `.json` files
+- You cannot perform file I/O at runtime
+- You cannot dynamically load external data
+
+This makes traditional configuration files unusable.
+
+---
+
+## 2. The Solution: Pseudo JSON Files
+
+A **pseudo JSON file** is a JavaScript file that exports a plain object.
+
+Conceptually:
+
+- `.json` → becomes `.js`
+- JSON data → becomes a JavaScript object
+- `JSON.parse()` → becomes `import`
+
+---
+
+## 3. Example Pseudo JSON File
+
+```js
+export const GameConfig = {
+    server: {
+        name: "ExampleServer",
+        debug: false
+    },
+    economy: {
+        startingMoney: 100
+    }
+};
