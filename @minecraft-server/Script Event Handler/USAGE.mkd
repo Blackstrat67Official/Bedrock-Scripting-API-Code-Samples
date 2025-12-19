@@ -24,7 +24,7 @@ A Script Event is composed of:
 
 ### Example
 
-```mcfunction
+```
 /scriptevent example:test Hello
 ```
 
