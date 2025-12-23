@@ -1,0 +1,179 @@
+# Script Event `prefix:setLore` – Usage Guide
+
+This document explains how to use the `prefix:setLore` Script Event to modify the lore of the item a player is currently holding in Minecraft Bedrock Edition.
+
+The event uses a JSON payload and is handled through the Script API.
+
+---
+
+## Overview
+
+The `prefix:setLore` Script Event allows commands or scripts to set the lore of the item held in the player’s selected hotbar slot.
+
+The event:
+- Accepts a JSON payload
+- Works only when triggered by a player
+- Overwrites the existing lore of the item
+
+---
+
+## Event Identifier
+> prefix:setLore
+
+- **Namespace**: `prefix`
+- **Event name**: `setLore`
+
+---
+
+## How to Trigger the Event
+
+### From Chat or Functions
+
+```mcfunction
+/scriptevent prefix:setLore {"lore":["Example line","Second line"]}
+````
+
+This command must be executed by a player holding an item.
+
+---
+
+## Payload Format
+
+The message passed to the Script Event must be a valid JSON object.
+
+### Expected Structure
+
+```json
+{
+  "lore": []
+}
+```
+
+### Example Payload
+
+```json
+{
+  "lore": [
+    "§7Legendary Sword",
+    "§6Damage: +10",
+    "§8Forged in Ultia"
+  ]
+}
+```
+
+---
+
+## Lore Rules
+
+* `lore` must be an array
+* Each element is converted to a string
+* Existing lore is fully replaced
+* Formatting codes (`§`) are supported
+
+---
+
+## Execution Requirements
+
+The event is processed only if:
+
+* The source type is `Entity`
+* The source entity is a player
+* The player is holding an item
+* The JSON payload is valid
+
+If any of these conditions fail, the event is ignored or rejected.
+
+---
+
+## What Happens Internally
+
+1. The Script Event is received
+2. The event ID is validated
+3. The source is checked to be a player
+4. The JSON message is parsed
+5. The lore array is extracted
+6. The item in the selected slot is modified
+7. The updated item is placed back into the inventory
+
+---
+
+## Example Output
+
+When successful, the player receives:
+
+```
+Item lore updated successfully.
+```
+
+If the operation fails:
+
+```
+Failed to set item lore.
+```
+
+If the JSON is invalid:
+
+```
+Invalid JSON payload.
+```
+
+---
+
+## Common Errors
+
+| Issue            | Cause                      |
+| ---------------- | -------------------------- |
+| Nothing happens  | Player not holding an item |
+| Invalid JSON     | Malformed payload          |
+| Lore not applied | `lore` is not an array     |
+| Event ignored    | Triggered by block or NPC  |
+
+---
+
+## Best Practices
+
+* Validate JSON before sending the event
+* Limit lore length to avoid visual overflow
+* Use Script Events as controlled APIs
+* Avoid triggering from command blocks for player-specific actions
+
+---
+
+## Limitations
+
+* Lore is overwritten, not appended
+* No persistence beyond the item itself
+* No permission checks by default
+* Works only on the selected slot
+
+---
+
+## Intended Use Cases
+
+* Custom items
+* Admin tools
+* NPC rewards
+* Item upgrades
+* Debug utilities
+
+---
+
+## Notes
+
+This Script Event is designed to be a clean and safe interface for item modification.
+It can be easily extended to support additional item metadata such as name tags or custom data.
+
+---
+
+## Example Extension
+
+Possible future payload:
+
+```json
+{
+  "name": "§6Legendary Sword",
+  "lore": ["Line 1", "Line 2"]
+}
+```
+
+Handled by extending the same event handler.
