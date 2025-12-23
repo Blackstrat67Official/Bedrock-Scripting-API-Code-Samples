@@ -1,0 +1,203 @@
+# Custom Weapon Damage via Lore – Usage Guide
+
+This document explains how to create weapons with custom damage in Minecraft Bedrock Edition by using item lore and how to apply that lore using a Script Event.
+
+The system is composed of two parts:
+1. A **Script Event** used to set the lore on an item
+2. A **damage handler** that reads the lore and applies the correct damage on hit
+
+---
+
+## Overview
+
+Custom weapon damage is defined directly in the item lore.  
+When a player hits an entity, the script reads the lore of the held item, extracts the damage value, and adjusts the damage dealt to match the value specified in the lore.
+
+This approach allows:
+- Custom weapons
+- Dynamic damage values
+- No hardcoded item IDs
+- Full compatibility with vanilla items
+
+---
+
+## Lore Damage Schema
+
+The damage system relies on a fixed lore line format.
+
+```txt
+§r§9+{damage} damage per hit
+````
+
+Where:
+
+* `{damage}` is a numeric value (integer or decimal)
+* Formatting codes are part of the schema
+* The line must match exactly
+
+### Example
+
+```txt
+§r§9+12 damage per hit
+```
+
+---
+
+## Step 1 – Adding the Lore Using a Script Event
+
+Lore is applied using the `prefix:setLore` Script Event.
+
+### Event Identifier
+
+```txt
+prefix:setLore
+```
+
+---
+
+### Payload Format
+
+```json
+{
+  "lore": []
+}
+```
+
+---
+
+### Example: Creating a Custom Weapon
+
+While holding a sword:
+
+```mcfunction
+/scriptevent prefix:setLore {"lore":["§r§9+12 damage per hit"]}
+```
+
+After executing the command:
+
+* The item in hand receives the lore
+* The weapon is now a custom-damage weapon
+
+---
+
+## Step 2 – How Damage Is Applied
+
+When the player hits an entity:
+
+1. Minecraft applies its normal base damage
+2. The script reads the weapon lore
+3. The damage value is extracted from the lore
+4. The script calculates the difference
+5. The difference is applied as extra damage
+
+This ensures the **final damage exactly matches the lore value**.
+
+---
+
+## Damage Calculation Example
+
+| Value                | Amount |
+| -------------------- | ------ |
+| Vanilla damage       | 4      |
+| Lore damage          | 12     |
+| Extra damage applied | 8      |
+| Final damage         | 12     |
+
+---
+
+## Supported Damage Values
+
+* Integers: `+10 damage per hit`
+* Decimals: `+7.5 damage per hit`
+
+---
+
+## Valid and Invalid Lore Examples
+
+### Valid
+
+```txt
+§r§9+5 damage per hit
+§r§9+12.5 damage per hit
+```
+
+### Invalid (ignored)
+
+```txt
++10 damage
+§9+10 damage per hit
+§r§9+ten damage per hit
+```
+
+---
+
+## Execution Requirements
+
+The damage logic is applied only if:
+
+* The attacker is a player
+* The player is holding an item
+* The item has lore
+* At least one lore line matches the schema
+
+If any condition fails, vanilla damage is used.
+
+---
+
+## Common Errors
+
+| Issue                      | Cause                                       |
+| -------------------------- | ------------------------------------------- |
+| Damage not applied         | Lore format is incorrect                    |
+| Weapon does vanilla damage | Lore line does not match schema             |
+| No effect                  | Item has no lore                            |
+| Wrong damage               | Multiple damage lines (first match is used) |
+
+---
+
+## Best Practices
+
+* Use consistent formatting codes
+* Document the schema clearly
+* Apply lore only via Script Events
+* Avoid stacking multiple damage lines
+* Test with different weapons
+
+---
+
+## Intended Use Cases
+
+* RPG weapons
+* Boss drops
+* Class-based combat
+* Admin tools
+* Event rewards
+
+---
+
+## Extending the System
+
+This system can be extended to support:
+
+* Multiple damage types
+* Critical hits
+* Elemental damage
+* Armor penetration
+* Configurable schemas via pseudo JSON
+
+---
+
+## Full Workflow Example
+
+1. Player receives a weapon
+2. Admin applies custom damage lore using Script Event
+3. Player uses the weapon in combat
+4. Damage is handled dynamically by the script
+
+---
+
+## Notes
+
+* Lore-based damage is data-driven
+* No item duplication or replacement required
+* Fully compatible with vanilla mechanics
